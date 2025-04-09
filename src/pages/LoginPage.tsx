@@ -21,19 +21,9 @@ const LoginPage: React.FC = () => {
             console.log("Login successful, navigating to home...");
             navigate('/');
         } catch (err: any) {
-            console.error("Login failed:", err);
-            switch (err.code) {
-                case 'auth/user-not-found':
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential': // Catch common errors
-                    setError('Invalid email or password.');
-                    break;
-                case 'auth/invalid-email':
-                    setError('Invalid email address format.');
-                    break;
-                default:
-                    setError('Failed to log in. Please try again.');
-            }
+            console.error("Login failed:", err.code, err.message); // Log code and message
+            // Use the utility function to set the user-facing error
+            setError(mapAuthCodeToMessage(err.code));
         } finally {
             setLoading(false);
         }
@@ -47,9 +37,11 @@ const LoginPage: React.FC = () => {
             console.log("Google sign-in successful, navigating to home...");
             navigate('/');
         } catch (err: any) {
-            console.error("Google Sign-in failed:", err);
-            if (err.code !== 'auth/popup-closed-by-user') {
-                 setError('Failed to sign in with Google. Please try again.');
+            console.error("Google Sign-in failed:", err.code, err.message);
+            const message = mapAuthCodeToMessage(err.code);
+            // Don't show an error if the user simply closed the popup
+            if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                 setError(message);
             }
         } finally {
             setLoading(false);

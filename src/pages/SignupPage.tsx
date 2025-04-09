@@ -30,20 +30,9 @@ const SignupPage: React.FC = () => {
             console.log("Signup successful, navigating to home...");
             navigate('/');
         } catch (err: any) {
-            console.error("Signup failed:", err);
-             switch (err.code) {
-                case 'auth/email-already-in-use':
-                    setError('This email address is already registered.');
-                    break;
-                case 'auth/invalid-email':
-                    setError('Invalid email address format.');
-                    break;
-                case 'auth/weak-password':
-                    setError('Password is too weak (should be at least 6 characters).');
-                    break;
-                default:
-                    setError('Failed to create an account. Please try again.');
-            }
+            console.error("Signup failed:", err.code, err.message);
+            // Use the utility function to set the user-facing error
+            setError(mapAuthCodeToMessage(err.code));
         } finally {
             setLoading(false);
         }
