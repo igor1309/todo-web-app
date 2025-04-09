@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTodoService, Todo } from "../context/TodoServiceContext";
 import TodoList from "../components/TodoList";
 import AddTodoForm from "../components/AddTodoForm";
-import styles from "./HomePage.module.css"; // Assuming HomePage styles exist
+import styles from "./HomePage.module.css";
 
 const HomePage: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -13,62 +13,55 @@ const HomePage: React.FC = () => {
   const [loadingTodos, setLoadingTodos] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // --- Fetch Todos (with detailed logs) ---
+  // --- Fetch Todos ---
   const fetchTodos = useCallback(async () => {
-    console.log("HomePage: fetchTodos STARTING."); // <-- ADDED LOG
-
+    // ... (fetch implementation remains the same, include logs if desired)
+    console.log("HomePage: fetchTodos STARTING.");
     if (!currentUser) {
-      console.log("HomePage: No current user found in fetchTodos.");
-      setLoadingTodos(false); // Set loading false if no user
-      setTodos([]); // Clear any existing todos if user logs out
+      console.log("HomePage: No current user in fetchTodos.");
+      setLoadingTodos(false);
+      setTodos([]);
       return;
     }
-
     console.log(`HomePage: Attempting fetch for user: ${currentUser.uid}`);
-    setLoadingTodos(true); // Start loading
-    setError(null); // Clear previous errors
-
+    setLoadingTodos(true);
+    setError(null);
     try {
       console.log("HomePage: Calling service.getTodosForUser...");
-      // Use service.getTodosForUser from context
       const userTodos = await service.getTodosForUser(currentUser.uid);
-      // --- Log the fetched data ---
       console.log(
         `HomePage: Fetched ${userTodos.length} todos. Data:`,
         userTodos
-      ); // <-- ADDED LOG
-      // --- --------------------- ---
-      setTodos(userTodos); // Update state with fetched todos
-      console.log("HomePage: setTodos has been called."); // <-- ADDED LOG
+      );
+      setTodos(userTodos);
+      console.log("HomePage: setTodos has been called.");
     } catch (err) {
-      console.error("HomePage: Error during fetch:", err); // <-- MODIFIED LOG
+      console.error("HomePage: Error during fetch:", err);
       setError("Could not load your tasks. Please try again later.");
-      setTodos([]); // Clear todos on error
+      setTodos([]);
     } finally {
-      // CRUCIAL: Always set loading to false after attempt
       console.log(
         "HomePage: fetchTodos finally block - setting loadingTodos false."
-      ); // <-- MODIFIED LOG
+      );
       setLoadingTodos(false);
     }
-  }, [currentUser, service]); // Dependencies: currentUser and service
+  }, [currentUser, service]);
 
-  // Initial fetch effect
+  // --- Effects ---
   useEffect(() => {
-    console.log("HomePage: Mount/dependency effect - calling fetchTodos."); // <-- ADDED LOG
+    console.log("HomePage: Mount/dependency effect - calling fetchTodos.");
     fetchTodos();
-  }, [fetchTodos]); // Dependency ensures fetchTodos is stable
-
-  // --- Add Effect to monitor 'todos' state ---
+  }, [fetchTodos]);
   useEffect(() => {
-    console.log("HomePage: 'todos' state updated:", todos); // <-- ADDED LOG
+    console.log("HomePage: 'todos' state updated:", todos);
   }, [todos]);
-  // --- ------------------------------------- ---
 
-  // --- Define Handler for Toggling Completion ---
+  // --- Toggle Complete Handler ---
   const handleToggleComplete = async (id: string, currentStatus: boolean) => {
+    // ... (implementation remains the same)
     console.log(`Toggling completion for todo: ${id}`);
     setError(null);
+    const originalTodos = todos; // Store original state for potential revert
     setTodos((prevTodos) =>
       prevTodos.map((t) =>
         t.id === id ? { ...t, isCompleted: !currentStatus } : t
@@ -79,35 +72,59 @@ const HomePage: React.FC = () => {
     } catch (err) {
       console.error("Failed to toggle complete:", err);
       setError("Failed to update task status. Please try again.");
-      setTodos((prevTodos) =>
-        prevTodos.map((t) =>
-          t.id === id ? { ...t, isCompleted: currentStatus } : t
-        )
-      );
+      setTodos(originalTodos); // Revert optimistic update
     }
   };
 
-  // --- Define Handler for Deleting ---
+  // --- Delete Handler ---
   const handleDelete = async (id: string) => {
+    // ... (implementation remains the same)
     console.log(`Deleting todo: ${id}`);
     setError(null);
+    const originalTodos = todos; // Store original state for potential revert
     setTodos((prevTodos) => prevTodos.filter((t) => t.id !== id));
     try {
       await service.deleteTodo(id);
     } catch (err) {
       console.error("Failed to delete:", err);
       setError("Failed to delete task. Please try again.");
-      await fetchTodos(); // Re-fetch to restore list on delete failure
+      setTodos(originalTodos); // Revert optimistic update
+      // Or re-fetch: await fetchTodos();
     }
   };
 
+  // --- *** NEW: Update Text Handler *** ---
+  const handleUpdateText = async (id: string, newText: string) => {
+    console.log(`Updating text for todo: ${id} to "${newText}"`);
+    setError(null);
+    const originalTodos = todos; // Store original state for potential revert
+
+    // Optimistic UI Update
+    setTodos((prevTodos) =>
+      prevTodos.map((t) => (t.id === id ? { ...t, text: newText } : t))
+    );
+
+    try {
+      // Call the service to update the backend
+      await service.updateTodo(id, { text: newText });
+      // Optional: re-fetch if you don't trust optimistic update or need updatedAt sync
+      // await fetchTodos();
+    } catch (err) {
+      console.error("Failed to update text:", err);
+      setError("Failed to save task changes. Please try again.");
+      // Revert optimistic update on failure
+      setTodos(originalTodos);
+    }
+  };
+  // --- ******************************* ---
+
   // --- Logout Handler ---
   const handleLogout = async () => {
+    /* ... remains the same ... */
     setError(null);
     try {
       await logout();
       console.log("Logout successful");
-      // Redirect happens via ProtectedRoute checking currentUser
     } catch (error) {
       console.error("Failed to log out:", error);
       setError("Failed to log out.");
@@ -129,31 +146,31 @@ const HomePage: React.FC = () => {
             Welcome, {currentUser.email || `User ${currentUser.uid}`}!
           </p>
         )}
-        <button
-          onClick={handleLogout}
-          className={styles.logoutButton} // Assuming styles.logoutButton exists
-        >
-          Log Out
+        <button onClick={handleLogout} className={styles.logoutButton ?? ""}>
+          {" "}
+          Log Out{" "}
         </button>
       </div>
-      {/* Display general errors */}
+
+      {/* General Error Display */}
       {error && !loadingTodos && (
         <p className={`${styles.errorMessage || ""}`}>{error}</p>
-      )}{" "}
-      {/* Check if errorMessage class exists */}
+      )}
+
       <h2>Add New Task</h2>
       <AddTodoForm onTodoAdded={fetchTodos} />
+
       <hr style={{ margin: "20px 0" }} />
+
       <h2>Your Tasks</h2>
       <TodoList
         todos={todos}
         loading={loadingTodos}
-        // Only pass list-specific errors if handled separately,
-        // otherwise, the general error above might suffice or cause duplicates.
-        // For now, we pass the general error state.
-        error={error && !loadingTodos ? error : null} // Show error only if not loading
+        // Pass only list-specific errors if needed, otherwise general error is fine
+        error={error && !loadingTodos ? "Could not load tasks." : null} // Example: More specific list error
         onToggleComplete={handleToggleComplete}
         onDelete={handleDelete}
+        onUpdateText={handleUpdateText} // <-- Pass down the new handler
       />
     </div>
   );
