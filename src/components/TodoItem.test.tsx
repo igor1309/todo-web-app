@@ -1,22 +1,21 @@
 // src/components/TodoItem.test.tsx
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Timestamp } from "firebase/firestore";
 
-// Import the component being tested
+// Import the component being tested (will fail initially for new features)
 import TodoItem from "./TodoItem";
 // Import the type definition
-import { Todo } from "../context/TodoServiceContext"; // Assuming type export from context
+import { Todo } from "../context/TodoServiceContext";
 
 // --- Mock Data & Functions ---
-// Create mock data adhering to the Todo interface
 const mockTodoIncomplete: Todo = {
   id: "todo-1",
   text: "Incomplete Task",
   isCompleted: false,
   userId: "user1",
-  createdAt: Timestamp.now(), // Use Firestore Timestamp
+  createdAt: Timestamp.now(),
   updatedAt: Timestamp.now(),
 };
 const mockTodoComplete: Todo = {
@@ -28,18 +27,22 @@ const mockTodoComplete: Todo = {
   updatedAt: Timestamp.now(),
 };
 
-// Create mock handler functions using Vitest spies
+// Mock handler functions using Vitest spies
 const mockOnToggleComplete = vi.fn();
 const mockOnDelete = vi.fn();
+// Add mock for update handler
+const mockOnUpdateText = vi.fn();
 
 // Helper function to render the component with default or overridden props
 const renderTodoItem = (
   props: Partial<React.ComponentProps<typeof TodoItem>> = {}
 ) => {
-  const defaultProps = {
-    todo: mockTodoIncomplete, // Default to the incomplete task for most tests
+  const defaultProps: React.ComponentProps<typeof TodoItem> = {
+    // Ensure correct type
+    todo: mockTodoIncomplete, // Default to incomplete task
     onToggleComplete: mockOnToggleComplete,
     onDelete: mockOnDelete,
+    onUpdateText: mockOnUpdateText, // Provide default for the new prop
   };
   // Spread defaultProps first, then override with any props passed in
   return render(<TodoItem {...defaultProps} {...props} />);
@@ -47,91 +50,198 @@ const renderTodoItem = (
 
 // --- Tests ---
 describe("TodoItem Component", () => {
-  // Reset mocks before each test to ensure clean state
+  // Reset mocks before each test
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset any mock implementations if necessary, e.g., default success
+    mockOnUpdateText.mockResolvedValue(undefined);
   });
 
-  // Test 1: Renders todo text
   it("should render the todo text", () => {
     renderTodoItem();
-    // Find the element containing the text of the default incomplete todo
     expect(screen.getByText(mockTodoIncomplete.text)).toBeInTheDocument();
   });
 
-  // Test 2: Renders checkbox
   it("should render a checkbox", () => {
     renderTodoItem();
-    // Find the checkbox element by its accessibility role
     expect(screen.getByRole("checkbox")).toBeInTheDocument();
   });
 
-  // Test 3: Checkbox reflects incomplete status
   it("should render an unchecked checkbox if todo is not completed", () => {
-    renderTodoItem({ todo: mockTodoIncomplete }); // Explicitly pass incomplete todo
+    renderTodoItem({ todo: mockTodoIncomplete });
     expect(screen.getByRole("checkbox")).not.toBeChecked();
   });
 
-  // Test 4: Checkbox reflects complete status
   it("should render a checked checkbox if todo is completed", () => {
-    renderTodoItem({ todo: mockTodoComplete }); // Pass the completed todo
+    renderTodoItem({ todo: mockTodoComplete });
     expect(screen.getByRole("checkbox")).toBeChecked();
   });
 
-  // Test 5: Check for completed class when todo is completed
   it("should have the correct completed class on the text span when todo is completed", () => {
     renderTodoItem({ todo: mockTodoComplete });
     const todoTextElement = screen.getByText(mockTodoComplete.text);
-    // Assert that the element's class list contains the generated class for 'textCompleted'
-    // Using a regex match is often more reliable with CSS Modules
     expect(todoTextElement).toHaveClass(/textCompleted/);
   });
 
-  // Test 6: Check for absence of completed class when todo is incomplete
   it("should not have the completed class on the text span when todo is not completed", () => {
     renderTodoItem({ todo: mockTodoIncomplete });
     const todoTextElement = screen.getByText(mockTodoIncomplete.text);
-    // Assert that the element's class list does NOT contain the generated class
     expect(todoTextElement).not.toHaveClass(/textCompleted/);
   });
 
-  // Test 7: Calls onToggleComplete when checkbox is clicked
   it("should call onToggleComplete with the todo id and current status when checkbox is clicked", async () => {
     renderTodoItem({ todo: mockTodoIncomplete });
-    const user = userEvent.setup(); // Set up user interactions
+    const user = userEvent.setup();
     const checkbox = screen.getByRole("checkbox");
-
-    // Simulate a user click on the checkbox
     await user.click(checkbox);
-
-    // Assert that the mock callback was called once
     expect(mockOnToggleComplete).toHaveBeenCalledTimes(1);
-    // Assert that it was called with the correct arguments
     expect(mockOnToggleComplete).toHaveBeenCalledWith(
       mockTodoIncomplete.id,
       mockTodoIncomplete.isCompleted
     );
   });
 
-  // Test 8: Renders Delete button
   it("should render a delete button", () => {
     renderTodoItem();
-    // Find the button by role and accessible name (case-insensitive)
     expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
   });
 
-  // Test 9: Calls onDelete when Delete button is clicked
   it("should call onDelete with the todo id when delete button is clicked", async () => {
     renderTodoItem({ todo: mockTodoIncomplete });
     const user = userEvent.setup();
     const deleteButton = screen.getByRole("button", { name: /delete/i });
-
-    // Simulate a user click on the delete button
     await user.click(deleteButton);
-
-    // Assert the mock callback was called once
     expect(mockOnDelete).toHaveBeenCalledTimes(1);
-    // Assert it was called with the correct todo ID
     expect(mockOnDelete).toHaveBeenCalledWith(mockTodoIncomplete.id);
+  });
+
+  it("should display an Edit button when not in edit mode", () => {
+    renderTodoItem();
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /cancel/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument(); // Input field
+  });
+
+  it("should enter edit mode when Edit button is clicked", async () => {
+    renderTodoItem({ todo: mockTodoIncomplete });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: /edit/i }));
+
+    // Assertions for edit mode UI appearing:
+    const input = screen.getByRole("textbox");
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue(mockTodoIncomplete.text);
+    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+
+    // Assertions for display mode UI disappearing:
+    expect(screen.queryByText(mockTodoIncomplete.text)).not.toBeInTheDocument();
+    // Use the specific label query which works without waitFor
+    expect(
+      screen.queryByLabelText(`Edit task ${mockTodoIncomplete.text}`)
+    ).not.toBeInTheDocument();
+
+    // Assertions for elements remaining visible:
+    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+  });
+
+  it("should update the input value when typing in edit mode", async () => {
+    renderTodoItem();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /edit/i }));
+    const input = screen.getByRole("textbox");
+
+    await user.clear(input);
+    await user.type(input, "Updated text");
+
+    expect(input).toHaveValue("Updated text");
+  });
+
+  it("should exit edit mode without calling onUpdateText when Cancel button is clicked", async () => {
+    renderTodoItem({ todo: mockTodoIncomplete });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /edit/i }));
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "Changed my mind");
+
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+    // Back to display mode
+    expect(screen.getByText(mockTodoIncomplete.text)).toBeInTheDocument(); // Original text
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /cancel/i })
+    ).not.toBeInTheDocument();
+
+    expect(mockOnUpdateText).not.toHaveBeenCalled();
+  });
+
+  it("should call onUpdateText with id and new text and exit edit mode when Save button is clicked", async () => {
+    renderTodoItem({ todo: mockTodoIncomplete });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /edit/i }));
+    const input = screen.getByRole("textbox");
+
+    const newText = "Successfully updated task";
+    await user.clear(input);
+    await user.type(input, `  ${newText}  `); // Add whitespace
+
+    await user.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(mockOnUpdateText).toHaveBeenCalledTimes(1);
+    expect(mockOnUpdateText).toHaveBeenCalledWith(
+      mockTodoIncomplete.id,
+      newText
+    ); // Expect trimmed
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /save/i })
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /cancel/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("should NOT call onUpdateText if the text is unchanged or empty/whitespace when Save is clicked", async () => {
+    renderTodoItem({ todo: mockTodoIncomplete });
+    const user = userEvent.setup();
+
+    // Scenario 1: Text unchanged
+    await user.click(screen.getByRole("button", { name: /edit/i }));
+    await user.click(screen.getByRole("button", { name: /save/i }));
+    expect(mockOnUpdateText).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument(); // Exit edit mode
+    expect(
+      screen.queryByRole("button", { name: /save/i })
+    ).not.toBeInTheDocument();
+
+    // Scenario 2: Text is empty/whitespace
+    await user.click(screen.getByRole("button", { name: /edit/i })); // Re-enter
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "   ");
+    await user.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(mockOnUpdateText).not.toHaveBeenCalled(); // Still 0 calls
+    // Should remain in edit mode if save is invalid (empty text)
+    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveValue("   ");
   });
 });
