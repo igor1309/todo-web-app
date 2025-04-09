@@ -1,8 +1,8 @@
-// src/pages/LoginPage.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import AuthForm, { AuthFormField } from '../components/AuthForm'; // Import the new component
+import AuthForm, { AuthFormField } from '../components/AuthForm';
+import { mapAuthCodeToMessage } from '../utils/firebaseErrors'; 
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
