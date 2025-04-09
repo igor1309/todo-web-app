@@ -1,27 +1,31 @@
-// src/main.tsx (Conceptual - assuming minimal context file)
+// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext.tsx";
-import { TodoServiceProvider } from "./context/TodoServiceContext.tsx"; // Import Provider
-import * as RealTodoService from "./services/todoService"; // Import REAL functions
+// Import Todo Service Context types/provider
+import {
+  TodoServiceProvider,
+  ITodoService,
+} from "./context/TodoServiceContext.tsx";
+// Import the REAL service functions
+import * as RealTodoService from "./services/todoService";
 
-// --- Create the full, concrete service implementation ---
-const fullServiceImpl = {
-  // This object IS the concrete dependency
+// --- Create the actual service instance implementing the FULL interface ---
+const todoServiceImpl: ITodoService = {
   getTodosForUser: RealTodoService.getTodosForUser,
   addTodo: RealTodoService.addTodo,
   updateTodo: RealTodoService.updateTodo,
   deleteTodo: RealTodoService.deleteTodo,
 };
-// --- --------------------------------------------- ---
+// --- ----------------------------------------------------------------- ---
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AuthProvider>
-      {/* Provide the FULL concrete implementation */}
-      <TodoServiceProvider service={fullServiceImpl}>
+      {/* Provide the REAL service implementation to the whole app */}
+      <TodoServiceProvider service={todoServiceImpl}>
         <App />
       </TodoServiceProvider>
     </AuthProvider>
