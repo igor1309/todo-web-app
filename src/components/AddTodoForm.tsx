@@ -2,66 +2,59 @@
 import React, { useState } from "react";
 import { useTodoService } from "../context/TodoServiceContext";
 import { useAuth } from "../context/AuthContext";
+import styles from "./AuthForm.module.css"; // Assuming AuthForm styles are still relevant/used
 
+// --- 1. Component defines ITS OWN required interface ---
 interface ICanAddTodos {
   addTodo: (userId: string, text: string) => Promise<string>;
 }
+// --- -------------------------------------------- ---
 
+// Component props
 interface AddTodoFormProps {
-  onTodoAdded: () => void;
+  onTodoAdded: () => void; // Callback after successful add
 }
 
 const AddTodoForm: React.FC<AddTodoFormProps> = ({ onTodoAdded }) => {
   const [text, setText] = useState("");
-  // --- Add error state ---
   const [error, setError] = useState<string | null>(null);
-  // --- ---------------- ---
   const [isAdding, setIsAdding] = useState(false);
 
-  const service = useTodoService();
-  const { currentUser } = useAuth();
+  const service = useTodoService(); // Gets the full service object (real or mock)
+  const { currentUser } = useAuth(); // Gets user info
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedText = text.trim();
 
-    if (!trimmedText) return;
+    if (!trimmedText) return; // Do nothing if empty
     if (!currentUser) {
-      // --- Set error if no user ---
       setError("You must be logged in to add tasks.");
-      // --- ---------------------- ---
-      return;
+      return; // Cannot add if no user
     }
 
     setIsAdding(true);
-    // --- Reset error on new submission ---
-    setError(null);
-    // --- ----------------------------- ---
+    setError(null); // Reset error on new submission
 
     try {
       await service.addTodo(currentUser.uid, trimmedText);
-      setText("");
-      onTodoAdded();
+      setText(""); // Clear input on success
+      onTodoAdded(); // Call the callback prop
+      console.log("AddTodoForm: onTodoAdded callback executed."); // <-- ADDED LOG
     } catch (err) {
       console.error("Failed to add todo:", err);
-      // --- Set error message on failure ---
       setError("Could not add task. Please try again.");
-      // --- ---------------------------- ---
     } finally {
-      setIsAdding(false);
+      setIsAdding(false); // Reset loading state regardless of success/failure
     }
   };
 
   return (
-    // Add a div wrapper to contain form and error message together
+    // Using AuthForm styles as placeholder, adjust if needed or create AddTodoForm.module.css
     <div>
       <form
         onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "5px" /* Adjusted margin */,
-        }}
+        style={{ display: "flex", gap: "10px", marginBottom: "5px" }}
       >
         <input
           type="text"
@@ -70,19 +63,39 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ onTodoAdded }) => {
           placeholder="What needs to be done?"
           aria-label="New todo text"
           disabled={isAdding}
-          style={{ flexGrow: 1, padding: "8px" }}
+          // Using generic style, replace with styles.input if using module
+          style={{
+            flexGrow: 1,
+            padding: "8px",
+            backgroundColor: "#333",
+            color: "#d4d4d4",
+            border: "1px solid #555",
+            borderRadius: "4px",
+          }}
         />
-        <button type="submit" disabled={isAdding}>
+        <button
+          type="submit"
+          disabled={isAdding}
+          // Using generic style, replace with styles.button if using module
+          style={{
+            padding: "8px 15px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            backgroundColor: "#0e639c",
+            color: "white",
+            border: "1px solid #1c7cbb",
+            fontSize: "1rem",
+          }}
+        >
           {isAdding ? "Adding..." : "Add Task"}
         </button>
       </form>
-      {/* --- Conditionally render error message --- */}
+      {/* Using generic style, replace with styles.errorMessage if using module */}
       {error && (
-        <p style={{ color: "red", marginTop: "0", marginBottom: "10px" }}>
+        <p style={{ color: "#f87171", marginTop: "0", marginBottom: "10px" }}>
           {error}
         </p>
       )}
-      {/* --- ---------------------------------- --- */}
     </div>
   );
 };

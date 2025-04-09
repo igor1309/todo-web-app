@@ -1,0 +1,28 @@
+/* src/pages/HomePage.module.css */
+
+.logoutButton {
+  /* Copy from App.module.css .appContainer button */
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #4a0e0e; /* Make logout button red-ish maybe? */
+  color: white;
+  border: 1px solid #8b1d1d;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+  margin-bottom: 20px; /* Keep the margin */
+}
+
+.logoutButton:hover:not(:disabled) {
+  background-color: #8b1d1d; /* Darker red on hover */
+}
+
+.logoutButton:disabled {
+  /* Copy from App.module.css .appContainer button:disabled */
+  background-color: #555;
+  color: #aaa;
+  cursor: not-allowed;
+  border-color: #666;
+}
+
+/* You can add other HomePage specific styles here later */

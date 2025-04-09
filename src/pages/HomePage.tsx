@@ -2,11 +2,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTodoService, Todo } from "../context/TodoServiceContext";
-// --- Import TodoList ---
 import TodoList from "../components/TodoList";
-// --- ----------------- ---
 import AddTodoForm from "../components/AddTodoForm";
-// Removed useNavigate as it's not used here currently
+import styles from "./HomePage.module.css"; // Assuming HomePage styles exist
 
 const HomePage: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -15,9 +13,9 @@ const HomePage: React.FC = () => {
   const [loadingTodos, setLoadingTodos] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // --- Fetch Todos (with detailed logs) ---
   const fetchTodos = useCallback(async () => {
-    // Add logs for debugging
-    console.log("HomePage: fetchTodos called.");
+    console.log("HomePage: fetchTodos STARTING."); // <-- ADDED LOG
 
     if (!currentUser) {
       console.log("HomePage: No current user found in fetchTodos.");
@@ -34,28 +32,43 @@ const HomePage: React.FC = () => {
       console.log("HomePage: Calling service.getTodosForUser...");
       // Use service.getTodosForUser from context
       const userTodos = await service.getTodosForUser(currentUser.uid);
-      console.log(`HomePage: Fetched ${userTodos.length} todos.`);
+      // --- Log the fetched data ---
+      console.log(
+        `HomePage: Fetched ${userTodos.length} todos. Data:`,
+        userTodos
+      ); // <-- ADDED LOG
+      // --- --------------------- ---
       setTodos(userTodos); // Update state with fetched todos
+      console.log("HomePage: setTodos has been called."); // <-- ADDED LOG
     } catch (err) {
-      console.error("HomePage: Failed to fetch todos:", err);
+      console.error("HomePage: Error during fetch:", err); // <-- MODIFIED LOG
       setError("Could not load your tasks. Please try again later.");
       setTodos([]); // Clear todos on error
     } finally {
       // CRUCIAL: Always set loading to false after attempt
-      console.log("HomePage: Setting loadingTodos to false in finally block.");
+      console.log(
+        "HomePage: fetchTodos finally block - setting loadingTodos false."
+      ); // <-- MODIFIED LOG
       setLoadingTodos(false);
     }
   }, [currentUser, service]); // Dependencies: currentUser and service
 
+  // Initial fetch effect
   useEffect(() => {
+    console.log("HomePage: Mount/dependency effect - calling fetchTodos."); // <-- ADDED LOG
     fetchTodos();
-  }, [fetchTodos]);
+  }, [fetchTodos]); // Dependency ensures fetchTodos is stable
+
+  // --- Add Effect to monitor 'todos' state ---
+  useEffect(() => {
+    console.log("HomePage: 'todos' state updated:", todos); // <-- ADDED LOG
+  }, [todos]);
+  // --- ------------------------------------- ---
 
   // --- Define Handler for Toggling Completion ---
   const handleToggleComplete = async (id: string, currentStatus: boolean) => {
     console.log(`Toggling completion for todo: ${id}`);
-    setError(null); // Clear previous errors
-    // Optimistic UI update (optional but good UX)
+    setError(null);
     setTodos((prevTodos) =>
       prevTodos.map((t) =>
         t.id === id ? { ...t, isCompleted: !currentStatus } : t
@@ -63,12 +76,9 @@ const HomePage: React.FC = () => {
     );
     try {
       await service.updateTodo(id, { isCompleted: !currentStatus });
-      // Optional: Re-fetch to confirm, or rely on optimistic update
-      // await fetchTodos();
     } catch (err) {
       console.error("Failed to toggle complete:", err);
       setError("Failed to update task status. Please try again.");
-      // Revert optimistic update on failure
       setTodos((prevTodos) =>
         prevTodos.map((t) =>
           t.id === id ? { ...t, isCompleted: currentStatus } : t
@@ -81,47 +91,70 @@ const HomePage: React.FC = () => {
   const handleDelete = async (id: string) => {
     console.log(`Deleting todo: ${id}`);
     setError(null);
-    // Optimistic UI update
     setTodos((prevTodos) => prevTodos.filter((t) => t.id !== id));
     try {
       await service.deleteTodo(id);
-      // Optional: Re-fetch or rely on optimistic update
-      // await fetchTodos();
     } catch (err) {
       console.error("Failed to delete:", err);
       setError("Failed to delete task. Please try again.");
-      // Revert optimistic update on failure (requires fetching original list again)
-      // Consider simply showing error and letting user retry or refresh
       await fetchTodos(); // Re-fetch to restore list on delete failure
     }
   };
 
+  // --- Logout Handler ---
   const handleLogout = async () => {
-    /* ... no change needed ... */
+    setError(null);
+    try {
+      await logout();
+      console.log("Logout successful");
+      // Redirect happens via ProtectedRoute checking currentUser
+    } catch (error) {
+      console.error("Failed to log out:", error);
+      setError("Failed to log out.");
+    }
   };
 
   return (
     <div>
-      <h1>ToDo List</h1>
-      {/* ... user info and logout button ... */}
-      <button onClick={handleLogout} style={{ marginBottom: "20px" }}>
-        Log Out
-      </button>
-      <hr />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "10px",
+        }}
+      >
+        {currentUser && (
+          <p style={{ margin: 0 }}>
+            Welcome, {currentUser.email || `User ${currentUser.uid}`}!
+          </p>
+        )}
+        <button
+          onClick={handleLogout}
+          className={styles.logoutButton} // Assuming styles.logoutButton exists
+        >
+          Log Out
+        </button>
+      </div>
+      {/* Display general errors */}
+      {error && !loadingTodos && (
+        <p className={`${styles.errorMessage || ""}`}>{error}</p>
+      )}{" "}
+      {/* Check if errorMessage class exists */}
       <h2>Add New Task</h2>
       <AddTodoForm onTodoAdded={fetchTodos} />
       <hr style={{ margin: "20px 0" }} />
       <h2>Your Tasks</h2>
-
-      {/* --- Render TodoList instead of direct mapping --- */}
       <TodoList
         todos={todos}
         loading={loadingTodos}
-        error={error}
-        onToggleComplete={handleToggleComplete} // Pass handler
-        onDelete={handleDelete} // Pass handler
+        // Only pass list-specific errors if handled separately,
+        // otherwise, the general error above might suffice or cause duplicates.
+        // For now, we pass the general error state.
+        error={error && !loadingTodos ? error : null} // Show error only if not loading
+        onToggleComplete={handleToggleComplete}
+        onDelete={handleDelete}
       />
-      {/* --- ---------------------------------------- --- */}
     </div>
   );
 };
