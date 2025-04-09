@@ -1,7 +1,10 @@
-// src/components/TodoList.tsx - CORRECTED VERSION
+// src/components/TodoList.tsx
 import React from "react";
 import { Todo } from "../context/TodoServiceContext";
-import TodoItem from "./TodoItem"; // Make sure this import is correct
+import TodoItem from "./TodoItem";
+// --- Import styles ---
+import styles from "./TodoList.module.css";
+// --- --------------- ---
 
 interface TodoListProps {
   todos: Todo[];
@@ -18,25 +21,28 @@ const TodoList: React.FC<TodoListProps> = ({
   onToggleComplete,
   onDelete,
 }) => {
-  // Handle Loading state FIRST
+  // Handle Loading state
   if (loading) {
-    return <p>Loading tasks...</p>; // Should return ONLY this
+    // --- Apply message style ---
+    return <p className={styles.message}>Loading tasks...</p>;
   }
 
-  // Handle Error state SECOND
+  // Handle Error state
   if (error) {
-    return <p style={{ color: "red" }}>{error}</p>; // Should return ONLY this
+    // --- Apply error message style ---
+    return <p className={styles.errorMessage}>{error}</p>;
   }
 
-  // Handle Empty state THIRD
+  // Handle Empty state
   if (!todos || todos.length === 0) {
-    // Added check for !todos just in case
-    return <p>You have no tasks yet.</p>; // Should return ONLY this
+    // --- Apply message style ---
+    return <p className={styles.message}>You have no tasks yet.</p>;
   }
 
-  // If none of the above, THEN render the list
+  // Render the list
   return (
-    <ul style={{ listStyle: "none", padding: 0 }}>
+    // --- Apply list style ---
+    <ul className={styles.todoList}>
       {todos.map((todo) => (
         <TodoItem
           key={todo.id}

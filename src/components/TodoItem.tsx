@@ -1,9 +1,10 @@
 // src/components/TodoItem.tsx
 import React from "react";
-// Import Todo type
 import { Todo } from "../context/TodoServiceContext";
+// --- Import styles ---
+import styles from "./TodoItem.module.css";
+// --- --------------- ---
 
-// Define component props based on our plan
 interface TodoItemProps {
   todo: Todo;
   onToggleComplete: (id: string, currentStatus: boolean) => void;
@@ -16,28 +17,24 @@ const TodoItem: React.FC<TodoItemProps> = ({
   onDelete,
 }) => {
   const handleToggle = () => {
-    // Call the callback prop with necessary info
     onToggleComplete(todo.id, todo.isCompleted);
   };
 
   const handleDelete = () => {
-    // Call the callback prop with necessary info
     onDelete(todo.id);
   };
 
+  // Combine base text class with conditional completed class
+  const textClasses = `${styles.text} ${
+    todo.isCompleted ? styles.textCompleted : ""
+  }`;
+
   return (
-    // Render as list item, matching what TodoList expects
-    <li
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "10px",
-        borderBottom: "1px solid #eee", // Simple separator
-      }}
-    >
-      <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        {/* Test 2, 3, 4, 7 */}
+    // --- Apply item container class ---
+    <li className={styles.todoItem}>
+      {/* --- Apply content wrapper class --- */}
+      <span className={styles.content}>
+        {/* --- Apply checkbox class --- */}
         <input
           type="checkbox"
           checked={todo.isCompleted}
@@ -45,29 +42,16 @@ const TodoItem: React.FC<TodoItemProps> = ({
           aria-label={`Mark ${todo.text} as ${
             todo.isCompleted ? "incomplete" : "complete"
           }`}
+          className={styles.checkbox} // Apply checkbox style
         />
-        {/* Test 1, 5, 6 */}
-        <span
-          style={{
-            textDecoration: todo.isCompleted ? "line-through" : "none",
-            color: todo.isCompleted ? "#aaa" : "#000", // Dim completed text
-          }}
-        >
-          {todo.text}
-        </span>
+        {/* --- Apply text classes --- */}
+        <span className={textClasses}>{todo.text}</span>
       </span>
-      {/* Test 8, 9 */}
+      {/* --- Apply delete button class --- */}
       <button
         onClick={handleDelete}
         aria-label={`Delete task ${todo.text}`}
-        style={{
-          marginLeft: "10px",
-          padding: "3px 8px",
-          backgroundColor: "#fdd", // Light red background
-          border: "1px solid #fbb",
-          borderRadius: "3px",
-          cursor: "pointer",
-        }}
+        className={styles.deleteButton}
       >
         Delete
       </button>

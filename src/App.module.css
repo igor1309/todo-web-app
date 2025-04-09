@@ -1,0 +1,115 @@
+/* src/App.module.css */
+
+/* Apply styles to the main app container */
+.appContainer {
+  min-height: 100vh; /* Ensure it covers the full viewport height */
+  background-color: #1e1e1e; /* Dark background */
+  color: #d4d4d4; /* Light grey text */
+  padding: 20px;
+  font-family: sans-serif; /* Basic font */
+}
+
+/* Style the basic navigation */
+.nav {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #444; /* Darker border */
+  padding-bottom: 10px;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0; /* Reset default ul margin */
+  display: flex;
+  gap: 15px;
+}
+
+/* Style navigation links */
+.navLink {
+  color: #87cefa; /* Light Sky Blue for links */
+  text-decoration: none;
+  padding: 5px 0;
+}
+
+.navLink:hover,
+.navLink:focus {
+  color: #b0e0e6; /* Lighter Powder Blue on hover/focus */
+  text-decoration: underline;
+}
+
+/* General heading styles */
+.appContainer h1,
+.appContainer h2 {
+  color: #ffffff; /* White headings */
+  border-bottom: 1px solid #555; /* Separator for headings */
+  padding-bottom: 5px;
+  margin-top: 1em; /* Add space above headings */
+  margin-bottom: 0.8em;
+}
+
+/* Basic button styling (will be refined in component-specific modules) */
+.appContainer button {
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #0e639c; /* Darker blue */
+  color: white;
+  border: 1px solid #1c7cbb;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.appContainer button:hover:not(:disabled) {
+  background-color: #1c7cbb; /* Lighter blue on hover */
+}
+
+.appContainer button:disabled {
+  background-color: #555;
+  color: #aaa;
+  cursor: not-allowed;
+  border-color: #666;
+}
+
+/* Basic input styling (will be refined) */
+.appContainer input[type="text"],
+.appContainer input[type="email"],
+.appContainer input[type="password"] {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #333; /* Dark input background */
+  color: #d4d4d4; /* Light text */
+  font-size: 1rem;
+}
+
+.appContainer input[type="text"]:focus,
+.appContainer input[type="email"]:focus,
+.appContainer input[type="password"]:focus {
+  outline: none;
+  border-color: #1c7cbb; /* Blue border on focus */
+  box-shadow: 0 0 0 2px rgba(28, 124, 187, 0.5); /* Subtle glow on focus */
+}
+
+/* Basic hr styling */
+.appContainer hr {
+  border: none;
+  border-top: 1px solid #444; /* Darker horizontal rule */
+  margin: 20px 0;
+}
+
+/* Basic link styling within components */
+.appContainer a {
+  color: #87cefa; /* Light Sky Blue */
+}
+
+.appContainer a:hover {
+  color: #b0e0e6; /* Lighter Powder Blue */
+}
+
+/* Simple error message styling */
+.errorMessage {
+  color: #f87171; /* Light red for errors */
+  margin-top: 5px;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}

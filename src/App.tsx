@@ -1,32 +1,80 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import './App.css'; // Keep existing styles if needed
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
+
+// --- Import the CSS Module ---
+import styles from "./App.module.css";
+// --- You can remove the import for App.css if it's no longer needed ---
+// import './App.css';
 
 function App() {
+  // Get the current user status to conditionally render links
+  const { currentUser } = useAuth();
+
   return (
+    // Use BrowserRouter to enable routing
     <Router>
-      <div>
-        {/* Basic Navigation Links (temporary) */}
-        <nav style={{ marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>
-          <ul style={{ listStyle: 'none', padding: 0, display: 'flex', gap: '15px' }}>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/signup">Sign Up</Link></li>
+      {/* Apply the main container class from the CSS module */}
+      <div className={styles.appContainer}>
+        {/* Navigation Bar */}
+        <nav className={styles.nav}>
+          <ul className={styles.navList}>
+            {/* Link to Home Page */}
+            <li>
+              <Link className={styles.navLink} to="/">
+                Home
+              </Link>
+            </li>
+
+            {/* Conditional Links: Show Login/Signup only if no user is logged in */}
+            {!currentUser && (
+              <>
+                {" "}
+                {/* Use fragment to group conditional elements */}
+                <li>
+                  <Link className={styles.navLink} to="/login">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link className={styles.navLink} to="/signup">
+                    Sign Up
+                  </Link>
+                </li>
+              </>
+            )}
+            {/* We could add a conditional Logout link/button here later if desired */}
           </ul>
         </nav>
 
-        {/* Route Definitions */}
+        {/* Define the Application Routes */}
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          {/* Home Page Route (Protected) */}
+          <Route
+            path="/"
+            element={
+              // Wrap HomePage with ProtectedRoute to ensure user is logged in
+              <ProtectedRoute element={<HomePage />} />
+            }
+          />
+
+          {/* Login Page Route */}
           <Route path="/login" element={<LoginPage />} />
+
+          {/* Signup Page Route */}
           <Route path="/signup" element={<SignupPage />} />
-          {/* Add other routes here later */}
+
+          {/* Add other routes here if needed in the future */}
+          {/* Example: <Route path="/settings" element={<SettingsPage />} /> */}
         </Routes>
       </div>
     </Router>
   );
 }
 
+// Export the App component for use in main.tsx
 export default App;

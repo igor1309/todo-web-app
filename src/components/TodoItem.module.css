@@ -1,0 +1,65 @@
+/* src/components/TodoItem.module.css */
+
+.todoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px; /* More padding */
+  border-bottom: 1px solid #3a3a3a; /* Darker separator */
+  background-color: #2a2a2a; /* Match AuthForm background slightly */
+  transition: background-color 0.2s ease;
+}
+
+/* Style the left side (checkbox and text) */
+.content {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Increase gap */
+  flex-grow: 1; /* Allow text area to grow */
+  /* Allow text to wrap if it's very long */
+  overflow: hidden;
+  word-break: break-word; /* Break long words if necessary */
+}
+
+.checkbox {
+  /* Style checkbox appearance if desired - can be tricky cross-browser */
+  /* For now, rely on browser default but increase size slightly */
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+.text {
+  color: #d4d4d4; /* Default text color */
+  transition: color 0.2s ease; /* Smooth color transition */
+}
+
+.textCompleted {
+  text-decoration: line-through;
+  color: #777; /* Dimmer grey for completed text */
+}
+
+/* Style the delete button */
+.deleteButton {
+  margin-left: 15px; /* More space */
+  padding: 4px 10px; /* Adjust padding */
+  background-color: #5c1a1a; /* Dark red */
+  color: #fecaca; /* Light red text */
+  border: 1px solid #7f1d1d;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em; /* Slightly smaller text */
+  flex-shrink: 0; /* Prevent button from shrinking */
+  transition: background-color 0.2s ease;
+}
+
+.deleteButton:hover {
+  background-color: #7f1d1d; /* Darker red on hover */
+  color: #fee2e2;
+}
+
+/* Optional: Style for when hovering over the entire item */
+.todoItem:hover {
+  background-color: #333;
+}

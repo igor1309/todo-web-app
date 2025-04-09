@@ -1,0 +1,29 @@
+/* src/components/TodoList.module.css */
+
+.todoList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0; /* Remove default padding, add bottom margin */
+  border: 1px solid #3a3a3a; /* Add border around the list */
+  border-radius: 6px;
+  overflow: hidden; /* Ensure border radius applies to children */
+  background-color: #2a2a2a; /* Match item background */
+}
+
+/* Styles for the placeholder messages */
+.message {
+  padding: 20px;
+  text-align: center;
+  color: #aaa; /* Dimmer color for messages */
+  background-color: #2a2a2a; /* Match list background */
+  border: 1px solid #3a3a3a; /* Match list border */
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.errorMessage {
+  /* Inherit from .message but make text red */
+  composes: message; /* Inherit styles from .message */
+  color: #f87171; /* Error text color */
+  font-weight: bold;
+}

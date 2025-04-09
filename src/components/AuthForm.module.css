@@ -1,0 +1,69 @@
+/* src/components/AuthForm.module.css */
+
+.authFormContainer {
+  max-width: 400px; /* Limit form width */
+  margin: 2rem auto; /* Center the form horizontally with space */
+  padding: 25px;
+  background-color: #2a2a2a; /* Slightly lighter dark background for the form */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #ffffff; /* White title */
+  border-bottom: none; /* Remove inherited border */
+}
+
+.fieldGroup {
+  margin-bottom: 1rem; /* Space between form fields */
+}
+
+.fieldGroup label {
+  display: block; /* Label on its own line */
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+  color: #c0c0c0; /* Lighter grey for labels */
+  font-size: 0.9em;
+}
+
+/* Use general input styles from App.module.css by default, */
+/* but allow specific overrides if needed later */
+.input {
+  width: 100%; /* Make input fill container width */
+  box-sizing: border-box; /* Include padding/border in width calculation */
+}
+
+.submitButton {
+  width: 100%; /* Make button fill container width */
+  margin-top: 1.5rem; /* Space above submit button */
+  padding: 10px 15px;
+}
+
+/* Style the "extra" children area (like Google button) */
+.childrenContainer {
+  margin-top: 1rem;
+  text-align: center; /* Center buttons */
+  display: flex; /* Use flex for button layout */
+  justify-content: center;
+  gap: 10px;
+}
+
+.footerLink {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9em;
+}
+
+.footerLink a {
+  font-weight: bold;
+  /* Link color inherited from App.module.css */
+}
+
+.errorMessage {
+  color: #f87171; /* Light red */
+  text-align: center;
+  margin-bottom: 1rem;
+  min-height: 1.2em; /* Reserve space even when no error */
+}
