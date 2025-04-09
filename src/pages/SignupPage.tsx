@@ -1,40 +1,37 @@
 // src/pages/SignupPage.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { useNavigate } from 'react-router-dom';
+import AuthForm, { AuthFormField } from '../components/AuthForm'; // Import the new component
 
 const SignupPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState(''); // For password confirmation
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const { signup } = useAuth(); // Get signup function
+    const { signup } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
-        // Basic client-side validation
         if (password !== confirmPassword) {
             setError('Passwords do not match.');
             return;
         }
-        if (password.length < 6) {
-            setError('Password should be at least 6 characters long.');
-            return;
-        }
+        // Note: We let Firebase handle password strength check (min 6 chars enforced by Firebase)
+        // You could add more client-side checks if desired.
 
         setLoading(true);
         try {
             await signup(email, password);
             console.log("Signup successful, navigating to home...");
-            navigate('/'); // Redirect to home page on successful signup
+            navigate('/');
         } catch (err: any) {
             console.error("Signup failed:", err);
-            // Provide more user-friendly errors
-            switch (err.code) {
+             switch (err.code) {
                 case 'auth/email-already-in-use':
                     setError('This email address is already registered.');
                     break;
@@ -42,7 +39,7 @@ const SignupPage: React.FC = () => {
                     setError('Invalid email address format.');
                     break;
                 case 'auth/weak-password':
-                    setError('Password is too weak.');
+                    setError('Password is too weak (should be at least 6 characters).');
                     break;
                 default:
                     setError('Failed to create an account. Please try again.');
@@ -52,54 +49,50 @@ const SignupPage: React.FC = () => {
         }
     };
 
+    // Define the fields for the AuthForm
+    const formFields: AuthFormField[] = [
+        {
+            id: 'email',
+            label: 'Email',
+            type: 'email',
+            value: email,
+            onChange: (e) => setEmail(e.target.value),
+            required: true,
+            autoComplete: 'email'
+        },
+        {
+            id: 'password',
+            label: 'Password',
+            type: 'password',
+            value: password,
+            onChange: (e) => setPassword(e.target.value),
+            required: true,
+            minLength: 6,
+            autoComplete: 'new-password'
+        },
+        {
+            id: 'confirmPassword',
+            label: 'Confirm Password',
+            type: 'password',
+            value: confirmPassword,
+            onChange: (e) => setConfirmPassword(e.target.value),
+            required: true,
+            minLength: 6,
+            autoComplete: 'new-password'
+        }
+    ];
+
     return (
-        <div>
-            <h1>Sign Up</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="email">Email:</label><br/>
-                    <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        autoComplete="email"
-                    />
-                </div>
-                <div style={{ marginTop: '10px' }}>
-                    <label htmlFor="password">Password:</label><br/>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
-                        autoComplete="new-password"
-                    />
-                </div>
-                 <div style={{ marginTop: '10px' }}>
-                    <label htmlFor="confirmPassword">Confirm Password:</label><br/>
-                    <input
-                        type="password"
-                        id="confirmPassword"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        minLength={6}
-                        autoComplete="new-password"
-                    />
-                </div>
-                <button type="submit" disabled={loading} style={{ marginTop: '15px' }}>
-                    {loading ? 'Signing Up...' : 'Sign Up'}
-                </button>
-            </form>
-            <p style={{ marginTop: '20px' }}>
-                Already have an account? <Link to="/login">Log In</Link>
-            </p>
-        </div>
+        <AuthForm
+            title="Sign Up"
+            fields={formFields}
+            onSubmit={handleSubmit}
+            submitButtonText="Sign Up"
+            loading={loading}
+            error={error}
+            footerLink={{ text: 'Already have an account?', to: '/login' }}
+        />
+         // No extra children needed here for now
     );
 };
 
