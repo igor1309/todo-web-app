@@ -28,19 +28,22 @@ const mockTodos: Todo[] = [
   },
 ];
 
+// TodoList.test.tsx
 const mockOnToggleComplete = vi.fn();
 const mockOnDelete = vi.fn();
+const mockOnUpdateText = vi.fn(); // Already defined
 
-// Helper to render with specific props
 const renderTodoList = (
   props: Partial<React.ComponentProps<typeof TodoList>> = {}
 ) => {
-  const defaultProps = {
+  const defaultProps: React.ComponentProps<typeof TodoList> = {
+    // Use correct type
     todos: [],
     loading: false,
     error: null,
     onToggleComplete: mockOnToggleComplete,
     onDelete: mockOnDelete,
+    onUpdateText: mockOnUpdateText, // <-- ADD THIS MOCK AS DEFAULT
   };
   return render(<TodoList {...defaultProps} {...props} />);
 };

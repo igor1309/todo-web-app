@@ -9,7 +9,6 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp, // Use server timestamp for consistency
-  Timestamp, // Type for Timestamp fields
   orderBy, // To order todos
 } from "firebase/firestore";
 import { db } from "../firebase"; // Your initialized Firestore instance

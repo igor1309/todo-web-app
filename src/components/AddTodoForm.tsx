@@ -2,12 +2,7 @@
 import React, { useState } from "react";
 import { useTodoService } from "../context/TodoServiceContext";
 import { useAuth } from "../context/AuthContext";
-import styles from "./AuthForm.module.css"; // Assuming AuthForm styles are still relevant/used
 
-// --- 1. Component defines ITS OWN required interface ---
-interface ICanAddTodos {
-  addTodo: (userId: string, text: string) => Promise<string>;
-}
 // --- -------------------------------------------- ---
 
 // Component props
